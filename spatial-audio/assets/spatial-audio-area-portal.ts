@@ -8,57 +8,57 @@ const { Ray } = geometry;
 @menu('Audio/SpatialAudioAreaPortal')
 export class SpatialAudioAreaPortal extends Eventify(Component) 
 {
-	@type(PhysicsSystem.PhysicsGroup)
-	public hitLayerMask: number = 1;
+    @type(PhysicsSystem.PhysicsGroup)
+    public hitLayerMask: number = 1;
 
-	@property
-	public queryTrigger: boolean = false;
+    @property
+    public queryTrigger: boolean = false;
 
-	@property(CCFloat)
-	public rayDistance : number = 10;
+    @property(CCFloat)
+    public rayDistance : number = 10;
 
-	private declare _startPoint: Vec3;
-	private declare _endPoint:   Vec3;
+    private declare _startPoint: Vec3;
+    private declare _endPoint:   Vec3;
 
-	private declare _rayBuffer: geometry.Ray;
+    private declare _rayBuffer: geometry.Ray;
 
-	protected onLoad(): void 
-	{
-		this._rayBuffer = new Ray();
+    protected onLoad(): void 
+    {
+        this._rayBuffer = new Ray();
 
-		this._startPoint = this.node.worldPosition;
-		this._endPoint   = Vec3.ZERO;
+        this._startPoint = this.node.worldPosition;
+        this._endPoint   = Vec3.ZERO;
 
-		if (audioManager.listenerNode !== null)
-			this._endPoint = audioManager.listenerNode.worldPosition;
-	}
+        if (audioManager.listenerNode !== null)
+            this._endPoint = audioManager.listenerNode.worldPosition;
+    }
 
-	protected onEnable(): void 
-	{
-		audioManager.on(AudioManagerEventType.LISTENER_REGISTERED, this._handleListenerRegistered, this);
-		audioManager.on(AudioManagerEventType.LISTENER_UNREGISTERED, this._handleListenerUnregistered, this);
-	}
+    protected onEnable(): void 
+    {
+        audioManager.on(AudioManagerEventType.LISTENER_REGISTERED, this._handleListenerRegistered, this);
+        audioManager.on(AudioManagerEventType.LISTENER_UNREGISTERED, this._handleListenerUnregistered, this);
+    }
 
-	protected onDisable(): void 
-	{
-		audioManager.off(AudioManagerEventType.LISTENER_REGISTERED, this._handleListenerRegistered, this);
-		audioManager.off(AudioManagerEventType.LISTENER_UNREGISTERED, this._handleListenerUnregistered, this);
-	}
+    protected onDisable(): void 
+    {
+        audioManager.off(AudioManagerEventType.LISTENER_REGISTERED, this._handleListenerRegistered, this);
+        audioManager.off(AudioManagerEventType.LISTENER_UNREGISTERED, this._handleListenerUnregistered, this);
+    }
 
-	public isBlocked() : boolean
-	{
-		Ray.fromPoints(this._rayBuffer, this._startPoint, this._endPoint);
+    public isBlocked() : boolean
+    {
+        Ray.fromPoints(this._rayBuffer, this._startPoint, this._endPoint);
 
-		return PhysicsSystem.instance.raycast(this._rayBuffer, this.hitLayerMask, this.rayDistance, this.queryTrigger);
-	}
+        return PhysicsSystem.instance.raycast(this._rayBuffer, this.hitLayerMask, this.rayDistance, this.queryTrigger);
+    }
 
-	private _handleListenerRegistered()
-	{
-		this._endPoint = audioManager.listenerNode.worldPosition;
-	}
+    private _handleListenerRegistered()
+    {
+        this._endPoint = audioManager.listenerNode.worldPosition;
+    }
 
-	private _handleListenerUnregistered()
-	{
-		this._endPoint = Vec3.ZERO;
-	}
+    private _handleListenerUnregistered()
+    {
+        this._endPoint = Vec3.ZERO;
+    }
 }

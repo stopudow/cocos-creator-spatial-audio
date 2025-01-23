@@ -8,9 +8,7 @@ const { ccclass, menu } = _decorator;
 export class SpatialAudioListener extends Component 
 {
     protected onLoad() 
-	{
-		audioManager.registerListener(this)
+    {
+        audioManager.registerListener(this)
     }
 }
-
-
