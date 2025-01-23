@@ -1,0 +1,20 @@
+{
+	"$schema": "https://schemastore.azurewebsites.net/schemas/json/tsconfig.json",
+    "compilerOptions": {
+        "target": "ES2015",
+        "module": "ES2015",
+        "strict": false,
+        "types": [
+            "./../../../temp/declarations/cc.d.ts",
+            "./../../../temp/declarations/cc.env",
+            "./../../../temp/declarations/cc.custom-macro",
+            "./../../../temp/declarations/jsb"
+        ],
+        "rootDir": "./",
+        "experimentalDecorators": true,
+        "isolatedModules": true,
+        "moduleResolution": "node",
+        "noEmit": true,
+        "forceConsistentCasingInFileNames": true
+    }
+}
