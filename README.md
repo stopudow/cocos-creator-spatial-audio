@@ -28,31 +28,43 @@ const { ccclass, property } = _decorator;
 @ccclass('DemoSpatialAudioSource')
 export class DemoSpatialAudioSource extends Component 
 {
+    @property(AudioClip)
+    public audioClip: AudioClip = null;
+
+    @property(SpatialAudioSource)
+    public spatialAudioSource: SpatialAudioSource = null;
+
+    @property(AudioChannel)
+    public audioChannel: AudioChannel = null;
+
     public demoSpatialAudioSource(): void
     {
+        // Set audio clip that should play next (Not affect on currently playing clip)
+        this.spatialAudioSource.clip = this.audioClip;
+        
         // Enable looping
-        this.spatialAudioSource.setLoop(true);
+        this.spatialAudioSource.loop = true;
         
         // Set the volume in Range [0, 1]
-        this.spatialAudioSource.setVolume(1);
+        this.spatialAudioSource.volume = 1;
 
         // Set the playback rate in Range [0, 4]
-        this.spatialAudioSource.setPlaybackRate(2);
+        this.spatialAudioSource.playbackRate = 2;
 
         // Set the panning model 
-        this.spatialAudioSource.setPanningModel(PanningModel.HRTF);
+        this.spatialAudioSource.panningModel = PanningModel.HRTF;
 
         // Set the distance model which describes how the volume of sound decreases with distance
-        this.spatialAudioSource.setDistanceModel(DistanceModel.INVERSE);
+        this.spatialAudioSource.distanceModel = DistanceModel.INVERSE;
 
         // Set the volume rolloff factor; a higher value means a steeper decrease in volume with distance
-        this.spatialAudioSource.setVolumeRolloffFactor(100);
+        this.spatialAudioSource.volumeRolloffFactor = 100;
 
         // Set the minimum distance for sound attenuation; sounds will be at full volume within this distance
-        this.spatialAudioSource.setMinDistance(10);
+        this.spatialAudioSource.minDistance = 10;
 
         // Set the maximum distance for sound attenuation; sounds will be inaudible beyond this distance
-        this.spatialAudioSource.setMaxDistance(1000);
+        this.spatialAudioSource.maxDistance = 1000;
 
         // Assign the audio channel to the spatial audio source
         this.spatialAudioSource.setAudioChannelByTag("Demo Audio Channel");
@@ -73,3 +85,8 @@ export class DemoSpatialAudioSource extends Component
     }
 }
 ```
+
+## References
+
+- [[Share] 3D Audio Solution for Cocos Creator 3.x](https://forum.cocosengine.org/t/share-3d-audio-solution-for-cocos-creator-3-x/61068) - A forum post, discussing the 3D audio solution adapted for Cocos Creator 3.X.
+- [Web Audio API - MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) - A detailed guide on the Web Audio API, covering its capabilities and implementation.
