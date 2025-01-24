@@ -1,6 +1,9 @@
 import { _decorator, AudioClip, CCFloat, Component, __private, Enum, math } from 'cc';
 import { audioManager } from './audio-manager';
 import { AudioChannel } from './channel/audio-channel';
+import NullAudioBufferSourceNode from './nodes/null-audio-buffer-source-node';
+import NullGainNode from './nodes/null-gain-node';
+import NullPannerNode from './nodes/null-panner-node';
 
 const { ccclass, menu, property } = _decorator;
 
@@ -41,7 +44,15 @@ export class SpatialAudioSource extends Component
     @property({
         displayName: "Loop",
     })
-    public loop: boolean = false;
+    public set loop(value: boolean)
+    {
+        this._source.loop = value;
+    };
+
+    public get loop(): boolean
+    {
+        return this._source.loop;
+    }
 
     @property({
         displayName: "Play On Awake",
@@ -61,7 +72,15 @@ export class SpatialAudioSource extends Component
         step: 0.1,
         slide: true,
     })
-    public volume: number = 1;
+	public set volume(value: number)
+    {
+        this._gainNode.gain.value = math.clamp(value, 0, 1);
+    };
+
+    public get volume(): number
+    {
+        return this._gainNode.gain.value;
+    }
 
     @property({
         type: CCFloat,
@@ -71,25 +90,43 @@ export class SpatialAudioSource extends Component
         step: 0.1,
         slide: true,
     })
-    public playbackRate: number = 1;
+    public set playbackRate(value: number)
+    {
+        this._source.playbackRate.value = math.clamp(value, 0, 4);
+    };
+
+    public get playbackRate(): number
+    {
+        return this._source.playbackRate.value;
+    }
 
     @property({
         type: Enum(PanningModel),
         displayName: "Panning Model",
     })
-    public panningModel: PanningModel = 0;
+    public set panningModel(value: PanningModel)
+    {
+    	this._pannerNode.panningModel = this._getPanningModelType(value);
+    };
+
+    public get panningModel(): PanningModel
+    {
+        return this._getPanningModelEnumValue(this._pannerNode.panningModel);
+    }
 
     @property({
         type: Enum(DistanceModel),
         displayName: "Distance Model",
     })
-    public distanceModel: DistanceModel = 1;
+    public set distanceModel(value: DistanceModel)
+    {
+    	this._pannerNode.distanceModel = this._getDistanceModelType(value);
+    };
 
-    @property({
-        type: CCFloat,
-        serializable: true
-    })
-    private _volumeRolloffFactor: number = 1;
+    public get distanceModel(): DistanceModel
+    {
+        return this._getDistanceModelEnumValue(this._pannerNode.distanceModel);
+    }
 
     @property({
         type: CCFloat,
@@ -99,19 +136,13 @@ export class SpatialAudioSource extends Component
     })
     public set volumeRolloffFactor(value: number)
     {
-        this._volumeRolloffFactor = value;
+    	this._pannerNode.rolloffFactor = value;
     };
 
     public get volumeRolloffFactor(): number
     {
-        return this._volumeRolloffFactor;
+        return this._pannerNode.rolloffFactor;
     }
-
-    @property({
-        type: CCFloat,
-        serializable: true
-    })
-    private _minDistance: number = 1;
 
     @property({
         type: CCFloat,
@@ -122,14 +153,14 @@ export class SpatialAudioSource extends Component
     public set minDistance(value: number)
     {
         if (value > this._maxDistance)
-            this._minDistance = this._maxDistance - 0.01;
+            this._pannerNode.refDistance = this._pannerNode.maxDistance - 0.01;
         else
-            this._minDistance = value;
+            this._pannerNode.refDistance = value;
     };
 
     public get minDistance(): number
     {
-        return this._minDistance;
+        return this._pannerNode.refDistance;
     }
 
     @property({
@@ -146,15 +177,15 @@ export class SpatialAudioSource extends Component
     })
     public set maxDistance(value: number)
     {
-        if (value < this._minDistance)
-            this._maxDistance = this._minDistance + 0.01;
+        if (value < this._pannerNode.refDistance)
+            this._pannerNode.maxDistance = this._pannerNode.refDistance + 0.01;
         else
-            this._maxDistance = value;
+            this._pannerNode.maxDistance = value;
     };
 
     public get maxDistance(): number
     {
-        return this._maxDistance;
+        return this._pannerNode.maxDistance;
     }
 
     private _isPlaying:    boolean = false;
@@ -168,9 +199,9 @@ export class SpatialAudioSource extends Component
 
     private declare _audioListener: AudioListener;
 
-    private declare _source: AudioBufferSourceNode;
-    private declare _gainNode: GainNode;
-    private declare _pannerNode: PannerNode;
+    private _source: AudioBufferSourceNode = new NullAudioBufferSourceNode(null);
+    private _gainNode: GainNode            = new NullGainNode(null);
+    private _pannerNode: PannerNode        = new NullPannerNode(null);
 
     public get isPlaying(): boolean
     {
@@ -186,48 +217,6 @@ export class SpatialAudioSource extends Component
     {
         volume = math.clamp(volume, 0, 1);
         this._gainNode.gain.value = volume;
-    }
-
-    public setPlaybackRate(playbackRate: number)
-    {
-        playbackRate = math.clamp(playbackRate, 0, 4);
-        this._source.playbackRate.value = playbackRate;
-    }
-
-    public setPanningModel(panningModel: PanningModel)
-    {
-        this._pannerNode.panningModel = this._getPanningModel(panningModel);
-        this.panningModel = panningModel;
-    }
-
-    public setDistanceModel(volumeRollof: DistanceModel)
-    {
-        this._pannerNode.distanceModel = this._getDistanceModel(volumeRollof);
-        this.distanceModel = volumeRollof;
-    }
-
-    public setVolumeRolloffFactor(volumeRolloffFactor: number)
-    {
-        this._pannerNode.rolloffFactor = volumeRolloffFactor;
-        this._volumeRolloffFactor = volumeRolloffFactor;
-    }
-
-    public setMinDistance(minDistance: number)
-    {
-        this._pannerNode.refDistance = minDistance;
-        this._minDistance = minDistance;
-    }
-
-    public setMaxDistance(maxDistance: number)
-    {
-        this._pannerNode.maxDistance = maxDistance;
-        this._maxDistance = maxDistance;
-    }
-
-    public setLoop(isLooped: boolean)
-    {
-        this._source.loop = isLooped;
-        this.loop = isLooped;
     }
 
     protected onLoad() 
@@ -293,11 +282,13 @@ export class SpatialAudioSource extends Component
     {
         const pannerNode = audioManager.context.createPanner();
 
-        pannerNode.panningModel   = this._getPanningModel(this.panningModel);
-        pannerNode.distanceModel  = this._getDistanceModel(this.distanceModel);
-        pannerNode.maxDistance    = this._maxDistance;
-        pannerNode.refDistance    = this._minDistance;
-        pannerNode.rolloffFactor  = this._volumeRolloffFactor;
+        pannerNode.panningModel   = this._getPanningModelType(this.panningModel);
+        pannerNode.distanceModel  = this._getDistanceModelType(this.distanceModel);
+
+        pannerNode.maxDistance    = this.maxDistance;
+        pannerNode.refDistance    = this.minDistance;
+        pannerNode.rolloffFactor  = this.volumeRolloffFactor;
+
         pannerNode.coneInnerAngle = 360;
         
         pannerNode.orientationX.value = 1;
@@ -469,7 +460,7 @@ export class SpatialAudioSource extends Component
         this._pannerNode.positionZ.value = this.node.worldPosition.z;
     }
 
-    private _getPanningModel(panningModel: PanningModel): PanningModelType
+    private _getPanningModelType(panningModel: PanningModel): PanningModelType
     {
         switch (panningModel)
         {
@@ -479,9 +470,21 @@ export class SpatialAudioSource extends Component
                 return "HRTF";
         }
     }
-    private _getDistanceModel(volumeRolloff: DistanceModel): DistanceModelType
+
+	private _getPanningModelEnumValue(panningModel: PanningModelType): PanningModel
+	{
+		switch (panningModel)
+		{
+			case "equalpower":
+				return PanningModel.EQUALPOWER;
+			case "HRTF":
+				return PanningModel.HRTF;
+		}
+	}
+
+    private _getDistanceModelType(distanceModel: DistanceModel): DistanceModelType
     {
-        switch (volumeRolloff)
+        switch (distanceModel)
         {
             case DistanceModel.EXPONENTIAL:
                 return "exponential";
@@ -491,6 +494,19 @@ export class SpatialAudioSource extends Component
                 return "linear";
         }
     }
+
+	private _getDistanceModelEnumValue(distanceModel: DistanceModelType): DistanceModel
+	{
+		switch (distanceModel)
+		{
+			case "exponential":
+				return DistanceModel.EXPONENTIAL;
+			case "inverse":
+				return DistanceModel.INVERSE;
+			case "linear":
+				return DistanceModel.LINEAR;
+		}
+	}
     
     private _releaseAudioNodes()
     {
